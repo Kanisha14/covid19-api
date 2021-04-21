@@ -29,7 +29,7 @@ from utils.get_data import (DailyReports, DataTimeSeries,
 import covid_api_v2_Adapter
 
 
-class CovidAPIv2Integrator(CovidAPIv2Adapter):
+class CovidAPIv2Integrator(CovidAPIv2Adapter, IObserver):
     """ Covid-19 API v2 methods
         SCHEMA: {
             "data": Any,
@@ -269,6 +269,12 @@ class CovidAPIv2Integrator(CovidAPIv2Adapter):
     #######################################################################################
     # GET - Timeseries US
     #######################################################################################
+    def update(self, subject: Subject) -> bool:
+        US = False
+        if subject._state == True:
+            US = True
+        return US
+    
     @wrap_data
     def get_US_time_series(self, case: str) -> List[TimeseriesUSModel]:
         """ Get USA time series """
@@ -276,8 +282,9 @@ class CovidAPIv2Integrator(CovidAPIv2Adapter):
             data = []
         else:
             self.df_US_time_series = self.time_series.get_data_time_series(US=True) # Get base data
-            raw_data = self.df_US_time_series[case].T.to_dict()
-            data = self.__extract_US_time_series(raw_data)
+            if CovidAPIv2Integrator.update() == True:
+                raw_data = self.df_US_time_series[case].T.to_dict()
+                data = self.__extract_US_time_series(raw_data)
 
         return data
 
